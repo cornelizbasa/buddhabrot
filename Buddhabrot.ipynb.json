@@ -1,0 +1,109 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 41,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "from __future__ import division\n",
+    "from bokeh.io import output_notebook, show\n",
+    "from bokeh.plotting import figure\n",
+    "import numpy as np\n",
+    "\n",
+    "class ComplexFractal():\n",
+    "    \"Abstract complex fractal\"\n",
+    "    maxit = 128\n",
+    "    def __init__(self,minz,maxz,**kwargs):\n",
+    "        self.__dict__.update(kwargs)\n",
+    "        self.at(minz, maxz)\n",
+    "\n",
+    "    def at(self,minz,maxz): \n",
+    "        self.minz = minz; self.maxz = maxz\n",
+    "        self.d = self.maxz-self.minz\n",
+    "        self.x = int(self.scale * self.d.real); self.y = int(self.scale * self.d.imag)\n",
+    "\n",
+    "    def z(self,i,j):\n",
+    "        return complex(self.minz.real + i * self.d.real / self.x,\n",
+    "                       self.minz.imag + (self.y-j) * self.d.imag / self.y)\n",
+    "\n",
+    "    def render(self):\n",
+    "        self.im = np.empty((self.x, self.y), dtype=np.uint32)\n",
+    "        self.view = self.im.view(dtype=np.uint8).reshape((self.x, self.y, 4))\n",
+    "        for i in range(self.x):\n",
+    "            for j in range(self.y):\n",
+    "                m = self.fractal(self.z(j,i))\n",
+    "                self.view[i,j,0]=m\n",
+    "                self.view[i,j,1]=m*self.y/255\n",
+    "                self.view[i,j,2]=m*self.x/255\n",
+    "                self.view[i,j,3]=255\n",
+    "\n",
+    "    def draw(self):\n",
+    "        self.render()\n",
+    "        p = figure(x_range=[0,self.x], y_range=[0,self.y])\n",
+    "        p.image_rgba(image=[self.im],x=[0],y=[0],dw=[self.x],dh=[self.y])\n",
+    "        show(p)\n",
+    "                        \n",
+    "class Mandelbrot(ComplexFractal):\n",
+    "    \"Mandelbrot fractal\"\n",
+    "    julia = None\n",
+    "\n",
+    "    def __init__(self,minz,maxz,**kwargs):\n",
+    "        ComplexFractal.__init__(self,minz,maxz,**kwargs)\n",
+    "\n",
+    "    def fractal(self,c):\n",
+    "        i = 0; z = self.julia and c or 0\n",
+    "        while i<self.maxit:\n",
+    "            z=z*z+(self.julia or c)\n",
+    "            if abs(z)>=2: \n",
+    "                return self.maxit-i\n",
+    "            i+=1\n",
+    "        return 0"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "mandel = Mandelbrot(-2-1.5j,1+1.5j,title='Mandelbrot',scale=10).draw()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "anaconda-cloud": {},
+  "kernelspec": {
+   "display_name": "Python [default]",
+   "language": "python",
+   "name": "python2"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 2
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython2",
+   "version": "2.7.12"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 1
+}
